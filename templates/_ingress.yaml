@@ -1,0 +1,30 @@
+{{- $ := .}}
+{{- define "helm-library.ingress.template" }}
+{{- $required := include "helm-library.common.required" $ }}
+apiVersion: networking.k8s.io/v1 {{ include "helm-library.ingress.apiVersion" $ }}
+kind: Ingress
+metadata:
+  name: {{ required (printf $required "name") .Values.name | quote }}
+  labels:
+    {{ include "helm-library.common.labels" | indent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: {{ .Values.ingress.class | default "nginx" | quote }}
+    {{ toYaml $.annotations | indent 4 }}
+spec:
+  ingressClassName: {{ $.className | default "nginx" }}
+  {{- if $.host }}
+  tls:
+  - hosts:
+    - {{ $.host }}
+    secretName: {{ $.name }}-tls
+  {{- end }}
+  rules:
+  {{- if $.host }}
+  - host: {{ $.host }}
+    http:
+  {{- else }}
+  - http:
+  {{- end }}
+      paths:
+      {{ include "helm-library.ingress.builder" $.paths | indent 6 }}
+{{- end }}
