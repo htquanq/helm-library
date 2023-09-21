@@ -1,30 +1,41 @@
 {{- $ := .}}
 {{- define "helm-library.ingress.template" }}
-{{- $required := include "helm-library.common.required" $ }}
-apiVersion: networking.k8s.io/v1 {{ include "helm-library.ingress.apiVersion" $ }}
+{{- range .Values.ingress }}
+{{- $ingressDict := dict }}
+---
+apiVersion: {{ include "helm-library.ingress.apiVersion" $ }}
 kind: Ingress
 metadata:
-  name: {{ required (printf $required "name") .Values.name | quote }}
+  name: {{ required "No value found for '%s'" .name | quote }}
   labels:
-    {{ include "helm-library.common.labels" | indent 4 }}
+  {{- include "helm-library.common.labels" $ | indent 4 }}
   annotations:
-    kubernetes.io/ingress.class: {{ .Values.ingress.class | default "nginx" | quote }}
-    {{ toYaml $.annotations | indent 4 }}
+    kubernetes.io/ingress.class: {{ .className | default "nginx" | quote }}
+  {{- if .annotations }}
+    {{- toYaml .annotations | indent 4 }}
+  {{- end }}
 spec:
-  ingressClassName: {{ $.className | default "nginx" }}
-  {{- if $.host }}
+  ingressClassName: {{ .className | default "nginx" }}
+  {{- if .host }}
   tls:
   - hosts:
-    - {{ $.host }}
-    secretName: {{ $.name }}-tls
+    - {{ .host }}
+    secretName: {{ .name }}-tls
   {{- end }}
   rules:
-  {{- if $.host }}
-  - host: {{ $.host }}
+  {{- if .host }}
+  - host: {{ .host }}
     http:
   {{- else }}
   - http:
   {{- end }}
       paths:
-      {{ include "helm-library.ingress.builder" $.paths | indent 6 }}
+
+{{- if eq "networking.k8s.io/v1" (include "helm-library.ingress.apiVersion" $) }}
+{{- $_ := set $ingressDict "networking" .paths }}
+{{- else }}
+{{- $_ := set $ingressDict "extension" .paths }}
+{{- end }}
+{{- include "helm-library.ingress.builder" $ingressDict | indent 6 }}
+{{- end }}
 {{- end }}

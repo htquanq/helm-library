@@ -6,13 +6,7 @@
 {{- end }}
 {{- end }}
 
-{{- define "helm-library.common.required" -}}
-{{- "No value found for '%s' in the template" -}}
-{{- end -}}
-
-{{- define "helm-library.common.labels" -}}
-{{- $message := include "helm-library.required" . -}}
-app.kubernetes.io/name: {{ required (printf $message "name") .Values.name | quote }}
+{{- define "helm-library.common.labels" }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
 helm.sh/chart: {{ .Chart.Name }}
