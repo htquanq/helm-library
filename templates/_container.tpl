@@ -78,11 +78,12 @@ httpGet:
   {{ include "helm-library.container.env.builder" .env | indent 2 }}
   {{- end }}
   {{- if .command }}
-  command: {{ .command }}
+  command:
+    {{ toYaml .command }}
   {{- end }}
   {{- if .args }}
   args:
-  {{- toYaml .args | indent 4 }}
+  {{ toYaml .args | indent 2 }}
   {{- end }}
   {{- if or .limits .requests }}
   resources:
